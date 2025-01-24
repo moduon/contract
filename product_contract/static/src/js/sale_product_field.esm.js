@@ -44,6 +44,7 @@ patch(SaleOrderLineProductField.prototype, {
             default_company_id: this.props.record.model.root.data.company_id[0],
             default_product_uom_qty: this.props.record.data.product_uom_qty,
             default_contract_id: this.props.record.data.contract_id[0],
+            default_recurring_interval: this.props.record.data.recurring_interval,
             default_date_start: this.props.record.data.date_start,
             default_date_end: this.props.record.data.date_end,
             default_is_auto_renew: this.props.record.data.is_auto_renew,
@@ -54,7 +55,9 @@ patch(SaleOrderLineProductField.prototype, {
             additionalContext: actionContext,
             onClose: async (closeInfo) => {
                 if (closeInfo && !closeInfo.special) {
-                    this.props.record.update(closeInfo.productContractConfiguration);
+                    this.props.record._update(closeInfo.productContractConfiguration, {
+                        withoutOnchange: true,
+                    });
                 } else if (isNew) {
                     this.props.record.update({
                         [this.props.name]: undefined,

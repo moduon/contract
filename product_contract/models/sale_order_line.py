@@ -30,23 +30,25 @@ class SaleOrderLine(models.Model):
         string="Contract Template",
         compute="_compute_contract_template_id",
     )
+    recurring_interval = fields.Integer(
+        default=1,
+        string="Invoice Every",
+        help="Invoice every (Days/Week/Month/Year)",
+    )
     recurring_rule_type = fields.Selection(related="product_id.recurring_rule_type")
     recurring_invoicing_type = fields.Selection(
         related="product_id.recurring_invoicing_type"
     )
-    date_start = fields.Date()
-    date_end = fields.Date()
-
+    date_start = fields.Date(compute="_compute_date_start", readonly=False, store=True)
+    date_end = fields.Date(compute="_compute_date_end", readonly=False, store=True)
     contract_line_id = fields.Many2one(
         comodel_name="contract.line",
         string="Contract Line to replace",
-        required=False,
         copy=False,
     )
     is_auto_renew = fields.Boolean(
         string="Auto Renew",
         compute="_compute_auto_renew",
-        default=False,
         store=True,
         readonly=False,
     )
@@ -97,47 +99,75 @@ class SaleOrderLine(models.Model):
                 rec.order_id.company_id
             ).property_contract_template_id
 
+    @api.depends("product_id")
+    def _compute_date_start(self):
+        for sol in self:
+            if sol.contract_start_date_method == "start_this":
+                sol.date_start = sol.order_id.date_order.replace(day=1)
+            elif sol.contract_start_date_method == "end_this":
+                sol.date_start = (
+                    sol.order_id.date_order
+                    + self.get_relative_delta(
+                        sol.recurring_rule_type, sol.product_id.default_qty
+                    )
+                ).replace(day=1) - relativedelta(days=1)
+            elif sol.contract_start_date_method == "start_next":
+                # Dia 1 del siguiente recurring_rule_type
+                sol.date_start = (
+                    sol.order_id.date_order
+                    + self.get_relative_delta(
+                        sol.recurring_rule_type, sol.product_id.default_qty
+                    )
+                ).replace(day=1)
+            elif sol.contract_start_date_method == "end_next":
+                # Last day of next recurring period
+                sol.date_start = (
+                    sol.order_id.date_order
+                    + self.get_relative_delta(
+                        sol.recurring_rule_type, sol.product_id.default_qty + 1
+                    )
+                ).replace(day=1) - relativedelta(days=1)
+            else:
+                # Manual method
+                sol.date_start = False
+
+    @api.depends(
+        "is_auto_renew",
+        "date_start",
+        "auto_renew_interval",
+        "auto_renew_rule_type",
+    )
+    def _compute_date_end(self):
+        for sol in self:
+            if sol.is_auto_renew and sol.date_start:
+                sol.date_end = self.env["contract.line"]._get_first_date_end(
+                    sol.date_start,
+                    sol._get_auto_renew_rule_type(),
+                    sol.auto_renew_interval,
+                )
+            else:
+                sol.date_end = False
+
+    @api.model
+    def get_relative_delta(self, recurring_rule_type, interval):
+        return self.env["contract.recurrency.mixin"].get_relative_delta(
+            recurring_rule_type, interval
+        )
+
     def _get_auto_renew_rule_type(self):
         """monthly last day don't make sense for auto_renew_rule_type"""
         self.ensure_one()
-        if self.recurring_rule_type == "monthlylastday":
+        if self.auto_renew_rule_type == "monthlylastday":
             return "monthly"
-        return self.recurring_rule_type
-
-    def _get_date_end(self):
-        self.ensure_one()
-        contract_start_date_method = self.product_id.contract_start_date_method
-        date_end = False
-        if contract_start_date_method == "manual":
-            contract_line_model = self.env["contract.line"]
-            date_end = (
-                self.date_start
-                + contract_line_model.get_relative_delta(
-                    self._get_auto_renew_rule_type(),
-                    int(self.product_uom_qty),
-                )
-                - relativedelta(days=1)
-            )
-        return date_end
+        return self.auto_renew_rule_type
 
     @api.depends("product_id")
     def _compute_auto_renew(self):
-        for rec in self:
-            if rec.product_id.is_contract:
-                rec.product_uom_qty = rec.product_id.default_qty
-                contract_start_date_method = rec.product_id.contract_start_date_method
-                if contract_start_date_method == "manual":
-                    rec.date_start = rec.date_start or fields.Date.today()
-                rec.date_end = rec._get_date_end()
-                rec.is_auto_renew = rec.product_id.is_auto_renew
-                if rec.is_auto_renew:
-                    rec.auto_renew_interval = rec.product_id.auto_renew_interval
-                    rec.auto_renew_rule_type = rec.product_id.auto_renew_rule_type
-
-    @api.onchange("date_start", "product_uom_qty")
-    def onchange_date_start(self):
         for rec in self.filtered("product_id.is_contract"):
-            rec.date_end = rec._get_date_end() if rec.date_start else False
+            rec.product_uom_qty = rec.product_id.default_qty
+            rec.is_auto_renew = rec.product_id.is_auto_renew
+            rec.auto_renew_interval = rec.product_id.auto_renew_interval
+            rec.auto_renew_rule_type = rec.product_id.auto_renew_rule_type
 
     def _get_contract_line_qty(self):
         """Returns the amount that will be placed in new contract lines."""
@@ -178,7 +208,7 @@ class SaleOrderLine(models.Model):
             "date_end": self.date_end,
             "date_start": self.date_start or fields.Date.today(),
             "recurring_next_date": recurring_next_date,
-            "recurring_interval": 1,
+            "recurring_interval": self.recurring_interval or 1,
             "recurring_invoicing_type": self.recurring_invoicing_type,
             "recurring_rule_type": self.recurring_rule_type,
             "is_auto_renew": self.is_auto_renew,
