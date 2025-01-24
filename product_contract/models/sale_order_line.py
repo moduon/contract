@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.tools import str2bool
 
 MONTH_NB_MAPPING = {
     "monthly": 1,
@@ -73,6 +74,9 @@ class SaleOrderLine(models.Model):
     )
     contract_start_date_method = fields.Selection(
         related="product_id.contract_start_date_method"
+    )
+    product_contract_description = fields.Text(
+        compute="_compute_product_contract_description"
     )
 
     @api.constrains("contract_id")
@@ -307,64 +311,103 @@ class SaleOrderLine(models.Model):
                     start_date = start_date + relativedelta(day=31)
             line.date_start = start_date
 
-    @api.depends("product_id")
-    def _compute_name(self):
-        res = super()._compute_name()
+    def _get_product_contract_date_text(self):
+        self.ensure_one()
+        date_text = ""
+        if self.contract_start_date_method == "manual":
+            date_text = "%s" % self.date_start
+            if self.date_end:
+                date_text += " -> %s" % self.date_end
+        else:
+            field_info = dict(
+                self._fields["contract_start_date_method"].get_description(self.env)
+            )
+            field_selection = dict(field_info.get("selection"))
+            start_method_label = field_selection.get(self.contract_start_date_method)
+            date_text = start_method_label and "%s" % start_method_label
+            if (
+                self.recurring_rule_type != "monthly"
+                and self.product_id["force_month_%s" % self.recurring_rule_type]
+            ):
+                field_info = dict(
+                    self.env["product.template"]
+                    ._fields["force_month_%s" % self.recurring_rule_type]
+                    .get_description(self.env)
+                )
+                field_selection = dict(field_info.get("selection"))
+                force_month_label = field_selection.get(
+                    self.product_id["force_month_%s" % self.recurring_rule_type]
+                )
+                date_text += " (%s)" % force_month_label
+        return date_text and _("- Date: {}").format(date_text)
+
+    def _get_product_contract_recurring_rule_label(self):
+        self.ensure_one()
+        field_info = dict(self._fields["recurring_rule_type"].get_description(self.env))
+        field_selection = dict(field_info.get("selection"))
+        recurring_rule_label = field_selection.get(self.recurring_rule_type)
+        return recurring_rule_label and _("- Recurrency: {}").format(
+            recurring_rule_label
+        )
+
+    def _get_product_contract_invoicing_type_label(self):
+        field_info = dict(
+            self._fields["recurring_invoicing_type"].get_description(self.env)
+        )
+        field_selection = dict(field_info.get("selection"))
+        invoicing_type_label = field_selection.get(self.recurring_invoicing_type)
+        return invoicing_type_label and _("- Invoicing Type: {}").format(
+            invoicing_type_label
+        )
+
+    @api.depends(
+        "product_id",
+        "date_start",
+        "date_end",
+        "recurring_rule_type",
+        "recurring_invoicing_type",
+    )
+    def _compute_product_contract_description(self):
+        self.product_contract_description = False
         for line in self:
             if line.is_contract:
-                date_text = ""
-                if line.contract_start_date_method == "manual":
-                    date_text = "%s" % line.date_start
-                    if line.date_end:
-                        date_text += " -> %s" % line.date_end
-                else:
-                    field_info = dict(
-                        line._fields["contract_start_date_method"].get_description(
-                            self.env
-                        )
-                    )
-                    field_selection = dict(field_info.get("selection"))
-                    start_method_label = field_selection.get(
-                        line.contract_start_date_method
-                    )
-                    date_text = "%s" % start_method_label
-                    if (
-                        line.recurring_rule_type != "monthly"
-                        and line.product_id["force_month_%s" % line.recurring_rule_type]
-                    ):
-                        field_info = dict(
-                            self.env["product.template"]
-                            ._fields["force_month_%s" % line.recurring_rule_type]
-                            .get_description(self.env)
-                        )
-                        field_selection = dict(field_info.get("selection"))
-                        force_month_label = field_selection.get(
-                            line.product_id["force_month_%s" % line.recurring_rule_type]
-                        )
-                        date_text += " (%s)" % force_month_label
-                field_info = dict(
-                    self._fields["recurring_rule_type"].get_description(self.env)
-                )
-                field_selection = dict(field_info.get("selection"))
-                recurring_rule_label = field_selection.get(line.recurring_rule_type)
-                field_info = dict(
-                    self._fields["recurring_invoicing_type"].get_description(self.env)
-                )
-                field_selection = dict(field_info.get("selection"))
-                invoicing_type_label = field_selection.get(
-                    line.recurring_invoicing_type
-                )
-                line.name = _(
-                    """{product}:
-    - Recurrency: {recurring_rule}
-    - Invoicing Type: {invoicing_type}
-    - Date: {date_text}
-                """
-                ).format(
-                    product=line.product_id.display_name,
-                    recurring_rule=recurring_rule_label,
-                    invoicing_type=invoicing_type_label,
-                    date_text=date_text,
-                )
+                description = ""
+                if (
+                    recurring_rule_label
+                    := line._get_product_contract_recurring_rule_label()
+                ):
+                    description += recurring_rule_label + "||"
+                if (
+                    invoicing_type_label
+                    := line._get_product_contract_invoicing_type_label()
+                ):
+                    description += invoicing_type_label + "||"
+                if date_text := line._get_product_contract_date_text():
+                    description += date_text + "||"
+                line.product_contract_description = description
 
+    @api.depends(
+        "date_start", "date_end", "recurring_rule_type", "recurring_invoicing_type"
+    )
+    def _compute_name(self):
+        res = super()._compute_name()
+        ICP = self.env["ir.config_parameter"].sudo()
+        for line in self:
+            if line.is_contract:
+                description = ""
+                if str2bool(ICP.get_param("product_contract.show_recurrency")) and (
+                    recurring_rule_label
+                    := line._get_product_contract_recurring_rule_label()
+                ):
+                    description += "\n\t" + recurring_rule_label
+                if str2bool(ICP.get_param("product_contract.show_invoicing_type")) and (
+                    invoicing_type_label
+                    := line._get_product_contract_invoicing_type_label()
+                ):
+                    description += "\n\t" + invoicing_type_label
+                if str2bool(ICP.get_param("product_contract.show_date")) and (
+                    date_text := line._get_product_contract_date_text()
+                ):
+                    description += "\n\t" + date_text
+                line.name = f"{line.product_id.display_name}{description}"
         return res

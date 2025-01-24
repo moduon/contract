@@ -100,6 +100,7 @@
             >
                 <field name="contract_template_id" column_invisible="1" />
                 <field name="is_contract" column_invisible="1" />
+                <field name="product_contract_description" column_invisible="1" />
                 <field
                     name="contract_id"
                     options='{"no_create": True}'
