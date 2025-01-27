@@ -39,8 +39,12 @@ class SaleOrderLine(models.Model):
     recurring_invoicing_type = fields.Selection(
         related="product_id.recurring_invoicing_type"
     )
-    date_start = fields.Date(compute="_compute_date_start", readonly=False, store=True)
-    date_end = fields.Date(compute="_compute_date_end", readonly=False, store=True)
+    date_start = fields.Date(
+        compute="_compute_date_start", readonly=False, store=True, precompute=True
+    )
+    date_end = fields.Date(
+        compute="_compute_date_end", readonly=False, store=True, precompute=True
+    )
     contract_line_id = fields.Many2one(
         comodel_name="contract.line",
         string="Contract Line to replace",
@@ -51,6 +55,7 @@ class SaleOrderLine(models.Model):
         compute="_compute_auto_renew",
         store=True,
         readonly=False,
+        precompute=True,
     )
     auto_renew_interval = fields.Integer(
         default=1,
@@ -59,6 +64,7 @@ class SaleOrderLine(models.Model):
         store=True,
         readonly=False,
         help="Renew every (Days/Week/Month/Year)",
+        precompute=True,
     )
     auto_renew_rule_type = fields.Selection(
         [
@@ -73,6 +79,7 @@ class SaleOrderLine(models.Model):
         readonly=False,
         string="Renewal type",
         help="Specify Interval for automatic renewal.",
+        precompute=True,
     )
     contract_start_date_method = fields.Selection(
         related="product_id.contract_start_date_method"
