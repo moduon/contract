@@ -4,6 +4,21 @@ import {SaleOrderLineProductField} from "@sale/js/sale_product_field";
 import {patch} from "@web/core/utils/patch";
 
 patch(SaleOrderLineProductField.prototype, {
+    get extraLines() {
+        var res = super.extraLines;
+        if (
+            this.props.record.data.is_contract &&
+            this.props.record.data.product_contract_description
+        ) {
+            for (var val of this.props.record.data.product_contract_description.split(
+                "||"
+            )) {
+                res.push(val);
+            }
+        }
+        return res;
+    },
+
     async _onProductUpdate() {
         super._onProductUpdate(...arguments);
         if (this.props.record.data.is_contract) {
