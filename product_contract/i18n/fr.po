@@ -145,6 +145,11 @@ msgid "Contract product should be service type"
 msgstr "L'article de contrat devrait être de type service"
 
 #. module: product_contract
+#: model_terms:ir.ui.view,arch_db:product_contract.product_contract_configurator_form
+msgid "Contract renew"
+msgstr ""
+
+#. module: product_contract
 #: model_terms:ir.ui.view,arch_db:product_contract.view_order_form
 msgid "Contracts"
 msgstr "Contrats"
@@ -260,12 +265,20 @@ msgid "ID"
 msgstr ""
 
 #. module: product_contract
+#: model:ir.model.fields,field_description:product_contract.field_product_contract_configurator__recurring_interval
 #: model:ir.model.fields,field_description:product_contract.field_product_contract_configurator__recurring_rule_type
 #: model:ir.model.fields,field_description:product_contract.field_product_product__recurring_rule_type
 #: model:ir.model.fields,field_description:product_contract.field_product_template__recurring_rule_type
+#: model:ir.model.fields,field_description:product_contract.field_sale_order_line__recurring_interval
 #: model:ir.model.fields,field_description:product_contract.field_sale_order_line__recurring_rule_type
 msgid "Invoice Every"
 msgstr "Facturer tous les"
+
+#. module: product_contract
+#: model:ir.model.fields,help:product_contract.field_product_contract_configurator__recurring_interval
+#: model:ir.model.fields,help:product_contract.field_sale_order_line__recurring_interval
+msgid "Invoice every (Days/Week/Month/Year)"
+msgstr ""
 
 #. module: product_contract
 #: model:ir.model.fields,field_description:product_contract.field_product_contract_configurator__recurring_invoicing_type
