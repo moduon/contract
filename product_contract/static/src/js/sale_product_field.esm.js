@@ -37,8 +37,8 @@ patch(SaleOrderLineProductField.prototype, {
         return super.isConfigurableLine || this.props.record.data.is_contract;
     },
 
-    async _openContractConfigurator(isNew = false) {
-        const actionContext = {
+    get contractContext() {
+        return {
             default_product_id: this.props.record.data.product_id[0],
             default_partner_id: this.props.record.model.root.data.partner_id[0],
             default_company_id: this.props.record.model.root.data.company_id[0],
@@ -51,6 +51,10 @@ patch(SaleOrderLineProductField.prototype, {
             default_auto_renew_interval: this.props.record.data.auto_renew_interval,
             default_auto_renew_rule_type: this.props.record.data.auto_renew_rule_type,
         };
+    },
+
+    async _openContractConfigurator(isNew = false) {
+        const actionContext = this.contractContext;
         this.action.doAction("product_contract.product_contract_configurator_action", {
             additionalContext: actionContext,
             onClose: async (closeInfo) => {
