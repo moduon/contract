@@ -65,8 +65,8 @@ To use this module, you need to:
 Known issues / Roadmap
 ======================
 
-- There's no support right now for computing the start date for the
-  following recurrent types: daily, weekly and monthlylastday.
+-  There's no support right now for computing the start date for the
+   following recurrent types: daily, weekly and monthlylastday.
 
 Bug Tracker
 ===========
@@ -90,15 +90,16 @@ Authors
 Contributors
 ------------
 
-- Ted Salmon <tsalmon@laslabs.com>
-- Souheil Bejaoui <souheil.bejaoui@acsone.eu>
-- `Tecnativa <https://www.tecnativa.com>`__:
+-  Ted Salmon <tsalmon@laslabs.com>
+-  Souheil Bejaoui <souheil.bejaoui@acsone.eu>
+-  `Tecnativa <https://www.tecnativa.com>`__:
 
-  - Ernesto Tejeda
-  - Pedro M. Baeza
-  - Carlos Roca
+   -  Ernesto Tejeda
+   -  Pedro M. Baeza
+   -  Carlos Roca
+   -  Sergio Teruel
 
-- David Jaen <david.jaen.revert@gmail.com>
+-  David Jaen <david.jaen.revert@gmail.com>
 
 Maintainers
 -----------
