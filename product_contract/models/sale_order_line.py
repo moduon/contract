@@ -149,7 +149,7 @@ class SaleOrderLine(models.Model):
             if sol.is_auto_renew and sol.date_start:
                 sol.date_end = self.env["contract.line"]._get_first_date_end(
                     sol.date_start,
-                    sol._get_auto_renew_rule_type(),
+                    sol.auto_renew_rule_type,
                     sol.auto_renew_interval,
                 )
             else:
@@ -160,13 +160,6 @@ class SaleOrderLine(models.Model):
         return self.env["contract.recurrency.mixin"].get_relative_delta(
             recurring_rule_type, interval
         )
-
-    def _get_auto_renew_rule_type(self):
-        """monthly last day don't make sense for auto_renew_rule_type"""
-        self.ensure_one()
-        if self.auto_renew_rule_type == "monthlylastday":
-            return "monthly"
-        return self.auto_renew_rule_type
 
     @api.depends("product_id")
     def _compute_auto_renew(self):

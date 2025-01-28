@@ -93,12 +93,5 @@ class ProductContractConfigurator(models.TransientModel):
         self.update({"date_end": False})
         for rec in self.filtered(lambda ln: ln.is_auto_renew and ln.date_start):
             rec.date_end = self.env["contract.line"]._get_first_date_end(
-                rec.date_start, rec._get_auto_renew_rule_type(), rec.auto_renew_interval
+                rec.date_start, rec.auto_renew_rule_type, rec.auto_renew_interval
             )
-
-    def _get_auto_renew_rule_type(self):
-        """monthly last day don't make sense for auto_renew_rule_type"""
-        self.ensure_one()
-        if self.auto_renew_rule_type == "monthlylastday":
-            return "monthly"
-        return self.auto_renew_rule_type
