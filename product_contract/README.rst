@@ -42,16 +42,6 @@ invoice directly.
 .. contents::
    :local:
 
-Configuration
-=============
-
-You can include the contract details on the sales order description by
-using the following system parameters:
-
-1. **Recurrency** -> product_contract.show_recurrency
-2. **Invoicing Type** -> product_contract.show_invoicing_type
-3. **Date** -> product_contract.show_date
-
 Usage
 =====
 
@@ -67,6 +57,10 @@ Known issues / Roadmap
 
 -  There's no support right now for computing the start date for the
    following recurrent types: daily, weekly and monthlylastday.
+-  It would be interesting to be able to configure what to display in
+   the line description using a configuration option, but using
+   \_compute_name is not valid because, if nothing is configured, it
+   would reset what we have in the description.
 
 Bug Tracker
 ===========
