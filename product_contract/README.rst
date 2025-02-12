@@ -65,8 +65,8 @@ To use this module, you need to:
 Known issues / Roadmap
 ======================
 
-- There's no support right now for computing the start date for the
-  following recurrent types: daily, weekly and monthlylastday.
+-  There's no support right now for computing the start date for the
+   following recurrent types: daily, weekly and monthlylastday.
 
 Bug Tracker
 ===========
@@ -90,16 +90,16 @@ Authors
 Contributors
 ------------
 
-- Ted Salmon <tsalmon@laslabs.com>
-- Souheil Bejaoui <souheil.bejaoui@acsone.eu>
-- `Tecnativa <https://www.tecnativa.com>`__:
+-  Ted Salmon <tsalmon@laslabs.com>
+-  Souheil Bejaoui <souheil.bejaoui@acsone.eu>
+-  `Tecnativa <https://www.tecnativa.com>`__:
 
-  - Ernesto Tejeda
-  - Pedro M. Baeza
-  - Carlos Roca
-  - Sergio Teruel
+   -  Ernesto Tejeda
+   -  Pedro M. Baeza
+   -  Carlos Roca
+   -  Sergio Teruel
 
-- David Jaen <david.jaen.revert@gmail.com>
+-  David Jaen <david.jaen.revert@gmail.com>
 
 Maintainers
 -----------
@@ -117,10 +117,13 @@ promote its widespread use.
 .. |maintainer-sbejaoui| image:: https://github.com/sbejaoui.png?size=40px
     :target: https://github.com/sbejaoui
     :alt: sbejaoui
+.. |maintainer-CarlosRoca13| image:: https://github.com/CarlosRoca13.png?size=40px
+    :target: https://github.com/CarlosRoca13
+    :alt: CarlosRoca13
 
-Current `maintainer <https://odoo-community.org/page/maintainer-role>`__:
+Current `maintainers <https://odoo-community.org/page/maintainer-role>`__:
 
-|maintainer-sbejaoui| 
+|maintainer-sbejaoui| |maintainer-CarlosRoca13| 
 
 This module is part of the `OCA/contract <https://github.com/OCA/contract/tree/17.0/product_contract>`_ project on GitHub.
 
