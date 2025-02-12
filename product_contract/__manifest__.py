@@ -21,6 +21,6 @@
     "installable": True,
     "application": False,
     "external_dependencies": {"python": ["dateutil"]},
-    "maintainers": ["sbejaoui"],
+    "maintainers": ["sbejaoui", "CarlosRoca13"],
     "assets": {"web.assets_backend": ["product_contract/static/src/js/*"]},
 }
